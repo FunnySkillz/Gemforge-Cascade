@@ -8,7 +8,11 @@ Open this folder in Unity 2022.3 LTS, open `Assets/Scenes/Main.unity`, and press
 
 Click a piece and a neighbor, or drag horizontally/vertically. Invalid swaps cost no moves. Reach 1,000 points within 25 valid moves. Cascades award 10 points per piece times the cascade multiplier (1, 2, 3, ...). Restart appears after winning or losing.
 
-## Configuration
+## Design Documentation
+
+See [the design docs](docs/README.md) for the graphics/audio brief, UI/UX gaps, replayability proposals and prioritized roadmap. These describe planned improvements, not implemented features.
+
+## Level Configuration
 
 Select BoardManager in Main. Config controls width/height (3-16), piece types (3-6), cell size, moves and target score. Animation Duration controls swap/fall/clear timing.
 
