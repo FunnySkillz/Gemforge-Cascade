@@ -27,10 +27,10 @@ Only mark work `DONE` with evidence. Passing pure .NET rules tests does not prov
 | Item | State |
 | --- | --- |
 | Active phase | Phase 2 - Competitive core (engine-independent work) |
-| Current task | `P2.2` blast and color-clear specials |
-| Last completed task | `P2.1` line-clear creation and activation |
+| Current task | `P2.3` special-to-special combinations |
+| Last completed task | `P2.2` blast and color-clear specials |
 | Primary blocker | Unity 2022.3 LTS/Hub is not installed or available on PATH |
-| Next review gate | P2.2 blast/color-clear creation and activation tests pass |
+| Next review gate | P2.3 combination matrix is defined and all interactions pass tests |
 
 ## Phase overview
 
@@ -97,7 +97,7 @@ Outcome: ten authored levels offer real planning choices and introduce mechanics
 | ID | Deliverable | Status |
 | --- | --- | --- |
 | P2.1 | Four-in-line creates horizontal/vertical line-clear specials | `DONE` |
-| P2.2 | T/L creates blast special; five-in-line creates color clear | `NOT STARTED` |
+| P2.2 | T/L creates blast special; five-in-line creates color clear | `DONE` |
 | P2.3 | Define and implement every special-to-special combination | `NOT STARTED` |
 | P2.4 | Implement collect-color objective | `NOT STARTED` |
 | P2.5 | Implement clear-layer objective | `NOT STARTED` |
@@ -227,6 +227,8 @@ Choose one path explicitly:
 | 2026-09-19 | Keep monetization and live operations out of the first slice | Audience, feel and differentiation are not yet validated |
 | 2026-09-19 | Treat this file as delivery source of truth | Plans and status need one updateable location |
 | 2026-09-19 | Continue engine-independent Phase 1 while Phase 0 is blocked | Pure model work and tests are useful without claiming Unity validation |
+| 2026-09-19 | Use special precedence Blast > Color Clear > Line Clear | Intersecting shapes produce one clear result; straight five-plus outranks straight four |
+| 2026-09-19 | Blast uses a 3x3 area; matched Color Clear removes its own color | Bounded, readable prototype rules that can be tuned after playtesting |
 
 ## Open decisions
 
@@ -248,6 +250,7 @@ Choose one path explicitly:
 | 2026-09-19 | Completed P1.1-P1.5 model foundation | 5,935,658 assertions pass; next is P1.6 validation/simulation |
 | 2026-09-19 | Completed P1.6 validation and deterministic simulation | 5,935,670 assertions pass; P1.7 blocked on Unity, begin P2.1 rules |
 | 2026-09-19 | Completed P2.1 line-special rules and runtime flow | Preferred-cell creation, row/column activation, chain reaction and layer-hit tests pass; prototype marker added |
+| 2026-09-19 | Completed P2.2 blast and color-clear rules | T/L and five-match creation, survival and activation tests pass; 5,935,697 total assertions |
 
 ## Update checklist
 

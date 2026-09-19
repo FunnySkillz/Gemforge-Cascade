@@ -42,13 +42,14 @@ internal static class Program
         ExerciseStructuredMatches();
         ExerciseSpecialState();
         ExerciseLineSpecials();
+        ExerciseBlastAndColorSpecials();
         ExerciseLayersAndObjectives();
         ExerciseLevelValidation();
         ExerciseGameState();
 
         Console.WriteLine(
             $"PASS: {assertions:N0} assertions; 200 seeded boards, 2,000 turns, " +
-            "deterministic saves, structured matches, line specials, layers, objectives and game state.");
+            "deterministic saves, line/blast/color specials, layers, objectives and game state.");
     }
 
     private static void ExerciseGeneratedBoards()
@@ -267,6 +268,63 @@ internal static class Program
         level.startingLayers[4] = new CellLayerData(new CellLayer(CellLayerKind.Crystal, 2));
         BoardModel levelBoard = BoardModel.FromLevel(level);
         Check(levelBoard.Layers[1, 1].Durability == 2, "Authored layer did not load");
+    }
+
+    private static void ExerciseBlastAndColorSpecials()
+    {
+        var board = new BoardModel(5, 5, 6, 18);
+        Empty(board);
+        for (int x = 1; x <= 3; x++)
+            board.Cells[x, 2] = new BoardPiece(1);
+        for (int y = 1; y <= 3; y++)
+            board.Cells[2, y] = new BoardPiece(1);
+
+        int preferred = 2 * board.Width + 1;
+        MatchResolution tCreation = board.PlanMatchResolution(board.FindMatches(), preferred);
+        Check(tCreation.CreatedPieces.Count == 1, "T match did not create exactly one special");
+        Check(tCreation.CreatedPieces.ContainsKey(preferred), "T match did not prefer player destination");
+        Check(tCreation.CreatedPieces[preferred].Special == SpecialKind.Blast, "T match created wrong special");
+        Check(tCreation.RemovedCells.Count == 4, "T match did not preserve its blast");
+        board.ApplyMatchResolution(tCreation);
+        Check(board.Cells[1, 2].Special == SpecialKind.Blast, "Created blast did not survive");
+
+        Empty(board);
+        for (int x = 0; x < 5; x++)
+            board.Cells[x, 0] = new BoardPiece(2);
+        int colorCell = 3;
+        MatchResolution colorCreation = board.PlanMatchResolution(board.FindMatches(), colorCell);
+        Check(colorCreation.CreatedPieces.Count == 1, "Five-match did not create exactly one special");
+        Check(colorCreation.CreatedPieces[colorCell].Special == SpecialKind.ColorClear,
+            "Five-match created wrong special");
+        Check(colorCreation.RemovedCells.Count == 4, "Five-match did not preserve its color clear");
+
+        Empty(board);
+        for (int y = 0; y < board.Height; y++)
+            for (int x = 0; x < board.Width; x++)
+                board.Cells[x, y] = new BoardPiece((x + y) % 3);
+        board.Cells[2, 1] = new BoardPiece(0);
+        board.Cells[2, 2] = new BoardPiece(0, SpecialKind.Blast);
+        board.Cells[2, 3] = new BoardPiece(0);
+        board.Cells[2, 4] = new BoardPiece(3);
+        MatchResolution blastActivation = board.PlanMatchResolution(board.FindMatches());
+        Check(blastActivation.AffectedCells.Count == 9,
+            $"Blast affected {blastActivation.AffectedCells.Count} cells instead of 9");
+        Check(board.ApplyMatchResolution(blastActivation).PieceCount == 9, "Blast removed wrong piece count");
+
+        Empty(board);
+        for (int y = 0; y < board.Height; y++)
+            for (int x = 0; x < board.Width; x++)
+                board.Cells[x, y] = new BoardPiece((x + y) % 3);
+        board.Cells[0, 0] = new BoardPiece(4);
+        board.Cells[0, 1] = new BoardPiece(4, SpecialKind.ColorClear);
+        board.Cells[0, 2] = new BoardPiece(4);
+        board.Cells[4, 4] = new BoardPiece(4);
+        board.Cells[3, 0] = new BoardPiece(4);
+        MatchResolution colorActivation = board.PlanMatchResolution(board.FindMatches());
+        Check(colorActivation.AffectedCells.Count == 5, "Color clear affected the wrong pieces");
+        ClearResult colorClear = board.ApplyMatchResolution(colorActivation);
+        Check(colorClear.PieceCount == 5 && colorClear.RemovedColor(4) == 5,
+            "Color clear removed the wrong color count");
     }
 
     private static void ExerciseLineSpecials()

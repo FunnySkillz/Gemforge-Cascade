@@ -401,29 +401,88 @@ namespace GemforgeCascade.Core
 
             var affected = new HashSet<int>(matches.Cells);
             var created = new Dictionary<int, BoardPiece>();
+            var consumedGroups = new HashSet<MatchGroup>();
+
+            for (int firstIndex = 0; firstIndex < matches.Groups.Count; firstIndex++)
+            {
+                MatchGroup first = matches.Groups[firstIndex];
+                for (int secondIndex = firstIndex + 1; secondIndex < matches.Groups.Count; secondIndex++)
+                {
+                    MatchGroup second = matches.Groups[secondIndex];
+                    if (first.Direction == second.Direction || first.ColorIndex != second.ColorIndex)
+                        continue;
+
+                    int intersection = FindIntersection(first, second);
+                    if (intersection < 0)
+                        continue;
+
+                    int creationCell = SelectShapeCreationCell(
+                        first,
+                        second,
+                        intersection,
+                        preferredCreationCell,
+                        created);
+                    if (creationCell >= 0)
+                        created.Add(creationCell, new BoardPiece(first.ColorIndex, SpecialKind.Blast));
+                    consumedGroups.Add(first);
+                    consumedGroups.Add(second);
+                }
+            }
 
             foreach (MatchGroup group in matches.Groups)
             {
-                if (group.Length != 4)
+                if (consumedGroups.Contains(group) || group.Length < 4)
                     continue;
 
                 int creationCell = SelectCreationCell(group, preferredCreationCell, created);
                 if (creationCell < 0)
                     continue;
 
-                SpecialKind special = group.Direction == MatchDirection.Horizontal
-                    ? SpecialKind.RowClear
-                    : SpecialKind.ColumnClear;
+                SpecialKind special = group.Length >= 5
+                    ? SpecialKind.ColorClear
+                    : group.Direction == MatchDirection.Horizontal
+                        ? SpecialKind.RowClear
+                        : SpecialKind.ColumnClear;
                 created.Add(creationCell, new BoardPiece(group.ColorIndex, special));
             }
 
-            ExpandLineSpecials(affected);
+            ExpandSpecials(affected);
 
             var removed = new HashSet<int>(affected);
             foreach (int creationCell in created.Keys)
                 removed.Remove(creationCell);
 
             return new MatchResolution(affected, removed, created);
+        }
+
+        private static int FindIntersection(MatchGroup first, MatchGroup second)
+        {
+            foreach (int firstCell in first.CellIds)
+                foreach (int secondCell in second.CellIds)
+                    if (firstCell == secondCell)
+                        return firstCell;
+            return -1;
+        }
+
+        private static int SelectShapeCreationCell(
+            MatchGroup first,
+            MatchGroup second,
+            int intersection,
+            int preferredCreationCell,
+            IReadOnlyDictionary<int, BoardPiece> created)
+        {
+            if (preferredCreationCell >= 0 && !created.ContainsKey(preferredCreationCell) &&
+                (ContainsCell(first, preferredCreationCell) || ContainsCell(second, preferredCreationCell)))
+                return preferredCreationCell;
+            return created.ContainsKey(intersection) ? -1 : intersection;
+        }
+
+        private static bool ContainsCell(MatchGroup group, int cellId)
+        {
+            foreach (int groupCell in group.CellIds)
+                if (groupCell == cellId)
+                    return true;
+            return false;
         }
 
         private static int SelectCreationCell(
@@ -444,7 +503,7 @@ namespace GemforgeCascade.Core
             return -1;
         }
 
-        private void ExpandLineSpecials(HashSet<int> affected)
+        private void ExpandSpecials(HashSet<int> affected)
         {
             var pending = new Queue<int>(affected);
             var activated = new HashSet<int>();
@@ -469,6 +528,25 @@ namespace GemforgeCascade.Core
                 {
                     for (int columnY = 0; columnY < Height; columnY++)
                         AddAffected(affected, pending, columnY * Width + x);
+                }
+                else if (special == SpecialKind.Blast)
+                {
+                    for (int offsetY = -1; offsetY <= 1; offsetY++)
+                        for (int offsetX = -1; offsetX <= 1; offsetX++)
+                        {
+                            int blastX = x + offsetX;
+                            int blastY = y + offsetY;
+                            if (Contains(blastX, blastY))
+                                AddAffected(affected, pending, blastY * Width + blastX);
+                        }
+                }
+                else if (special == SpecialKind.ColorClear)
+                {
+                    int color = Cells[x, y].ColorIndex;
+                    for (int colorY = 0; colorY < Height; colorY++)
+                        for (int colorX = 0; colorX < Width; colorX++)
+                            if (!Cells[colorX, colorY].IsEmpty && Cells[colorX, colorY].ColorIndex == color)
+                                AddAffected(affected, pending, colorY * Width + colorX);
                 }
             }
         }

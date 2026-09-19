@@ -37,10 +37,22 @@ namespace GemforgeCascade.Core
         {
             Color = (PieceColor)state.ColorIndex;
             Special = state.Special;
-            specialMarker.enabled = Special == SpecialKind.RowClear || Special == SpecialKind.ColumnClear;
-            specialMarker.transform.localScale = Special == SpecialKind.RowClear
-                ? new Vector3(0.62f, 0.12f, 1f)
-                : new Vector3(0.12f, 0.62f, 1f);
+            specialMarker.enabled = Special != SpecialKind.None;
+            switch (Special)
+            {
+                case SpecialKind.RowClear:
+                    specialMarker.transform.localScale = new Vector3(0.62f, 0.12f, 1f);
+                    break;
+                case SpecialKind.ColumnClear:
+                    specialMarker.transform.localScale = new Vector3(0.12f, 0.62f, 1f);
+                    break;
+                case SpecialKind.Blast:
+                    specialMarker.transform.localScale = Vector3.one * 0.34f;
+                    break;
+                case SpecialKind.ColorClear:
+                    specialMarker.transform.localScale = Vector3.one * 0.58f;
+                    break;
+            }
         }
 
         public void Place(int x, int y, Vector3 position, bool instant)
