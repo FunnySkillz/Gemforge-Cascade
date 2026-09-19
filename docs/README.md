@@ -5,6 +5,7 @@ These documents describe proposed work, not shipped features. The audit is based
 1. [Graphics and audio direction](art-direction.md): identity, missing assets, effects and production requirements.
 2. [UI and UX audit](ui-ux-audit.md): current gaps, player flow, accessibility and acceptance checks.
 3. [Replayability and roadmap](replayability-roadmap.md): the intended hook, progression, priorities and playtest plan.
+4. [Competitive readiness](competitive-readiness.md): market comparison, product gap analysis, positioning and release gates.
 
 ## Recommendation
 
