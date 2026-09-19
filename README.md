@@ -12,6 +12,8 @@ Click a piece and a neighbor, or drag horizontally/vertically. Invalid swaps cos
 
 See [the design docs](docs/README.md) for the graphics/audio brief, UI/UX gaps, replayability proposals and prioritized roadmap. These describe planned improvements, not implemented features.
 
+Project execution is tracked in [the implementation plan](docs/IMPLEMENTATION_PLAN.md). This is the source of truth for phase status, decisions and completion evidence.
+
 ## Level Configuration
 
 Select BoardManager in Main. Config controls width/height (3-16), piece types (3-6), cell size, moves and target score. Animation Duration controls swap/fall/clear timing.

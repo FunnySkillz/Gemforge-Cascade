@@ -34,7 +34,7 @@ Six charges is a starting tuning value, not a balanced result. Test whether it a
 
 Before implementing, define special placement, activation, overlapping matches and scoring. Prefer a player's swapped destination for creation when it belongs to the match; otherwise use a deterministic rule. A new special must survive its creation clear. Deduplicate cleared cells, bound activation chains and resolve the whole turn before checking the outcome.
 
-The current `BoardModel` stores only color integers. Special kind needs separate explicit data; do not encode it by adding more color values. Add match-group information before using run shape to create specials.
+`BoardModel` now stores color and special kind separately and returns structured match groups. Special creation, survival and activation rules still need implementation before these states affect play.
 
 ## Progression with a reason to return
 

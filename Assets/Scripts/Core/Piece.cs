@@ -5,16 +5,18 @@ namespace GemforgeCascade.Core
     public sealed class Piece : MonoBehaviour
     {
         public Vector2Int GridPosition { get; private set; }
-        public PieceType Type { get; private set; }
+        public PieceColor Color { get; private set; }
+        public SpecialKind Special { get; private set; }
         public bool IsSelected { get; private set; }
         public bool IsMoving { get; private set; }
         private float size;
         private Vector3 start;
         private Vector3 target;
 
-        public void Initialize(int type, Sprite sprite, Color color, float cellSize)
+        public void Initialize(BoardPiece state, Sprite sprite, Color color, float cellSize)
         {
-            Type = (PieceType)type;
+            Color = (PieceColor)state.ColorIndex;
+            Special = state.Special;
             size = cellSize * 0.82f;
             var visual = gameObject.AddComponent<SpriteRenderer>();
             visual.sprite = sprite;
@@ -26,7 +28,9 @@ namespace GemforgeCascade.Core
         public void Place(int x, int y, Vector3 position, bool instant)
         {
             GridPosition = new Vector2Int(x, y);
-            name = $"{Type} ({x}, {y})";
+            name = Special == SpecialKind.None
+                ? $"{Color} ({x}, {y})"
+                : $"{Color} {Special} ({x}, {y})";
             start = transform.position;
             target = position;
             IsMoving = !instant && start != target;

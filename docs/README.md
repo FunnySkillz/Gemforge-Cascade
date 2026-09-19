@@ -2,6 +2,8 @@
 
 These documents describe proposed work, not shipped features. The audit is based on the source as of 2026-09-19; the Unity scene has not been visually playtested here.
 
+The canonical delivery tracker is [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). It records current status, decisions, completion evidence and the next task. When another document disagrees with it, the implementation plan wins.
+
 1. [Graphics and audio direction](art-direction.md): identity, missing assets, effects and production requirements.
 2. [UI and UX audit](ui-ux-audit.md): current gaps, player flow, accessibility and acceptance checks.
 3. [Replayability and roadmap](replayability-roadmap.md): the intended hook, progression, priorities and playtest plan.

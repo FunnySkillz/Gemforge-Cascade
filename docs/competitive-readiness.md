@@ -174,8 +174,8 @@ The current scene creates the camera, UI, event system, textures, pieces and man
 Before scaling content:
 
 - Replace runtime-built presentation with authored prefabs and scenes using serialized references.
-- Separate `PieceColor`, `SpecialKind`, cell state and blockers in the model.
-- Return structured match groups instead of only a set of cell indices.
+- Continue the new separation of `PieceColor`, `SpecialKind` and cell layers into blockers and special activation rules.
+- Build special creation and resolution on the new structured match groups and deduplicated clear set.
 - Define a turn-resolution command/event stream so visuals, audio, analytics and tests observe the same outcome.
 - Move level rules and objectives behind explicit interfaces/data definitions.
 - Add deterministic RNG state, save snapshots at stable turn boundaries and save migrations.

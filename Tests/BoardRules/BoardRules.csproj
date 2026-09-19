@@ -5,6 +5,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="../../Assets/Scripts/Core/BoardModel.cs" Link="BoardModel.cs" />
+    <Compile Include="../../Assets/Scripts/Core/DeterministicRandom.cs" Link="DeterministicRandom.cs" />
+    <Compile Include="../../Assets/Scripts/Core/GameData.cs" Link="GameData.cs" />
+    <Compile Include="../../Assets/Scripts/Core/ObjectiveTracker.cs" Link="ObjectiveTracker.cs" />
+    <Compile Include="../../Assets/Scripts/Core/LevelValidation.cs" Link="LevelValidation.cs" />
     <Compile Include="../../Assets/Scripts/Core/GameManager.cs" Link="GameManager.cs" />
   </ItemGroup>
 </Project>

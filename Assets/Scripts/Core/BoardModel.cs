@@ -3,30 +3,282 @@ using System.Collections.Generic;
 
 namespace GemforgeCascade.Core
 {
-    public enum PieceType { Red, Blue, Green, Yellow, Purple, Orange }
+    public enum PieceColor
+    {
+        Red,
+        Blue,
+        Green,
+        Yellow,
+        Purple,
+        Orange
+    }
+
+    public enum SpecialKind
+    {
+        None,
+        RowClear,
+        ColumnClear,
+        Blast,
+        ColorClear
+    }
+
+    public enum MatchDirection
+    {
+        Horizontal,
+        Vertical
+    }
+
+    public enum CellLayerKind
+    {
+        None,
+        Crystal
+    }
+
+    public struct CellLayer : IEquatable<CellLayer>
+    {
+        public static readonly CellLayer Empty = new CellLayer(CellLayerKind.None, 0);
+
+        public CellLayerKind Kind { get; }
+        public int Durability { get; }
+        public bool IsEmpty => Kind == CellLayerKind.None || Durability <= 0;
+
+        public CellLayer(CellLayerKind kind, int durability)
+        {
+            if (durability < 0)
+                throw new ArgumentOutOfRangeException(nameof(durability));
+            if (kind == CellLayerKind.None || durability == 0)
+            {
+                kind = CellLayerKind.None;
+                durability = 0;
+            }
+            Kind = kind;
+            Durability = durability;
+        }
+
+        public CellLayer Damage(out bool cleared)
+        {
+            cleared = false;
+            if (IsEmpty)
+                return Empty;
+            if (Durability == 1)
+            {
+                cleared = true;
+                return Empty;
+            }
+            return new CellLayer(Kind, Durability - 1);
+        }
+
+        public bool Equals(CellLayer other) => Kind == other.Kind && Durability == other.Durability;
+        public override bool Equals(object obj) => obj is CellLayer other && Equals(other);
+        public override int GetHashCode() => ((int)Kind * 397) ^ Durability;
+        public static bool operator ==(CellLayer left, CellLayer right) => left.Equals(right);
+        public static bool operator !=(CellLayer left, CellLayer right) => !left.Equals(right);
+    }
+
+    public sealed class ClearResult
+    {
+        private readonly int[] removedByColor;
+
+        public int PieceCount { get; internal set; }
+        public int LayersCleared { get; internal set; }
+
+        internal ClearResult(int colorCount)
+        {
+            removedByColor = new int[colorCount];
+        }
+
+        internal void AddColor(int colorIndex)
+        {
+            removedByColor[colorIndex]++;
+        }
+
+        public int RemovedColor(int colorIndex) =>
+            colorIndex >= 0 && colorIndex < removedByColor.Length ? removedByColor[colorIndex] : 0;
+    }
+
+    public struct BoardPiece : IEquatable<BoardPiece>
+    {
+        public static readonly BoardPiece Empty = new BoardPiece(-1, SpecialKind.None);
+
+        public int ColorIndex { get; }
+        public SpecialKind Special { get; }
+        public bool IsEmpty => ColorIndex < 0;
+
+        public BoardPiece(int colorIndex, SpecialKind special = SpecialKind.None)
+        {
+            ColorIndex = colorIndex;
+            Special = special;
+        }
+
+        public bool Equals(BoardPiece other) => ColorIndex == other.ColorIndex && Special == other.Special;
+        public override bool Equals(object obj) => obj is BoardPiece other && Equals(other);
+        public override int GetHashCode() => (ColorIndex * 397) ^ (int)Special;
+        public static bool operator ==(BoardPiece left, BoardPiece right) => left.Equals(right);
+        public static bool operator !=(BoardPiece left, BoardPiece right) => !left.Equals(right);
+    }
+
+    public sealed class MatchGroup
+    {
+        public int ColorIndex { get; }
+        public MatchDirection Direction { get; }
+        public IReadOnlyList<int> CellIds { get; }
+        public int Length => CellIds.Count;
+
+        public MatchGroup(int colorIndex, MatchDirection direction, IReadOnlyList<int> cellIds)
+        {
+            ColorIndex = colorIndex;
+            Direction = direction;
+            CellIds = cellIds;
+        }
+    }
+
+    public sealed class MatchResult
+    {
+        private readonly HashSet<int> cells = new HashSet<int>();
+        private readonly List<MatchGroup> groups = new List<MatchGroup>();
+
+        public IReadOnlyCollection<int> Cells => cells;
+        public IReadOnlyList<MatchGroup> Groups => groups;
+        public int Count => cells.Count;
+
+        internal void Add(MatchGroup group)
+        {
+            groups.Add(group);
+            foreach (int cellId in group.CellIds)
+                cells.Add(cellId);
+        }
+    }
 
     // Pure board rules, independent of scene objects and animation timing.
     public sealed class BoardModel
     {
         public int Width { get; }
         public int Height { get; }
-        public int[,] Cells { get; }
-        private readonly int types;
-        private readonly Random random;
+        public int ColorCount => colorCount;
+        public BoardPiece[,] Cells { get; }
+        public CellLayer[,] Layers { get; }
+        private readonly int colorCount;
+        private readonly DeterministicRandom random;
 
-        public BoardModel(int width, int height, int types, int? seed = null)
+        public uint RandomState => random.State;
+
+        public BoardModel(int width, int height, int colorCount, int? seed = null)
+            : this(width, height, colorCount, CreateSeed(seed), true)
         {
-            if (width < 3 || height < 3 || types < 3 || types > 6)
-                throw new ArgumentOutOfRangeException(nameof(width));
-            Width = width;
-            Height = height;
-            this.types = types;
-            random = seed.HasValue ? new Random(seed.Value) : new Random();
-            Cells = new int[width, height];
-            Generate();
         }
 
-        public int RandomType() => random.Next(types);
+        private BoardModel(int width, int height, int colorCount, uint seed, bool generate)
+        {
+            if (width < 3 || height < 3)
+                throw new ArgumentOutOfRangeException(nameof(width));
+            if (colorCount < 3 || colorCount > 6)
+                throw new ArgumentOutOfRangeException(nameof(colorCount));
+
+            Width = width;
+            Height = height;
+            this.colorCount = colorCount;
+            random = new DeterministicRandom(seed);
+            Cells = new BoardPiece[width, height];
+            Layers = new CellLayer[width, height];
+            if (generate)
+                Generate();
+        }
+
+        private static uint CreateSeed(int? seed) => seed.HasValue
+            ? unchecked((uint)seed.Value)
+            : unchecked((uint)(Environment.TickCount ^ Guid.NewGuid().GetHashCode()));
+
+        public static BoardModel FromLevel(LevelDefinition source)
+        {
+            LevelDefinition level = GameDataMigrations.Upgrade(source);
+            var board = new BoardModel(
+                level.width,
+                level.height,
+                level.colorCount,
+                unchecked((uint)level.seed),
+                false);
+
+            if (level.startingPieces == null || level.startingPieces.Length == 0)
+            {
+                board.Generate();
+            }
+            else
+            {
+                if (level.startingPieces.Length != level.width * level.height)
+                    throw new InvalidOperationException("Starting piece count must match level dimensions.");
+
+                for (int id = 0; id < level.startingPieces.Length; id++)
+                {
+                    BoardPiece piece = level.startingPieces[id].ToBoardPiece();
+                    if (piece.IsEmpty || piece.ColorIndex >= level.colorCount)
+                        throw new InvalidOperationException($"Invalid starting piece at cell {id}.");
+                    board.Cells[id % level.width, id / level.width] = piece;
+                }
+            }
+
+            if (level.startingLayers.Length != 0 && level.startingLayers.Length != level.width * level.height)
+                throw new InvalidOperationException("Starting layer count must match level dimensions.");
+            for (int id = 0; id < level.startingLayers.Length; id++)
+                board.Layers[id % level.width, id / level.width] = level.startingLayers[id].ToCellLayer();
+
+            return board;
+        }
+
+        public static BoardModel FromSnapshot(BoardSnapshot source)
+        {
+            BoardSnapshot snapshot = GameDataMigrations.Upgrade(source);
+            if (snapshot.randomState == 0)
+                throw new InvalidOperationException("Snapshot random state must be non-zero.");
+            if (snapshot.pieces == null || snapshot.pieces.Length != snapshot.width * snapshot.height)
+                throw new InvalidOperationException("Snapshot piece count must match board dimensions.");
+            if (snapshot.layers.Length != 0 && snapshot.layers.Length != snapshot.width * snapshot.height)
+                throw new InvalidOperationException("Snapshot layer count must match board dimensions.");
+
+            var board = new BoardModel(
+                snapshot.width,
+                snapshot.height,
+                snapshot.colorCount,
+                snapshot.randomState,
+                false);
+            for (int id = 0; id < snapshot.pieces.Length; id++)
+            {
+                BoardPiece piece = snapshot.pieces[id].ToBoardPiece();
+                if (!piece.IsEmpty && piece.ColorIndex >= snapshot.colorCount)
+                    throw new InvalidOperationException($"Invalid snapshot piece at cell {id}.");
+                board.Cells[id % snapshot.width, id / snapshot.width] = piece;
+            }
+            for (int id = 0; id < snapshot.layers.Length; id++)
+                board.Layers[id % snapshot.width, id / snapshot.width] = snapshot.layers[id].ToCellLayer();
+
+            return board;
+        }
+
+        public BoardSnapshot CreateSnapshot(string levelId)
+        {
+            var snapshot = new BoardSnapshot
+            {
+                levelId = levelId ?? string.Empty,
+                width = Width,
+                height = Height,
+                colorCount = colorCount,
+                randomState = RandomState,
+                pieces = new PieceData[Width * Height],
+                layers = new CellLayerData[Width * Height]
+            };
+
+            for (int y = 0; y < Height; y++)
+                for (int x = 0; x < Width; x++)
+                {
+                    int id = y * Width + x;
+                    snapshot.pieces[id] = new PieceData(Cells[x, y]);
+                    snapshot.layers[id] = new CellLayerData(Layers[x, y]);
+                }
+
+            return snapshot;
+        }
+
+        public BoardPiece RandomPiece() => new BoardPiece(random.Next(colorCount));
+        public void RestoreRandomState(uint state) => random.Restore(state);
         public bool Contains(int x, int y) => x >= 0 && y >= 0 && x < Width && y < Height;
 
         public void Generate()
@@ -34,77 +286,161 @@ namespace GemforgeCascade.Core
             for (int attempt = 0; attempt < 100; attempt++)
             {
                 for (int y = 0; y < Height; y++)
+                {
                     for (int x = 0; x < Width; x++)
                     {
-                        int type = RandomType();
-                        // At most two types are forbidden, so a safe type always exists.
-                        while ((x >= 2 && Cells[x - 1, y] == type && Cells[x - 2, y] == type) ||
-                               (y >= 2 && Cells[x, y - 1] == type && Cells[x, y - 2] == type))
-                            type = (type + 1) % types;
-                        Cells[x, y] = type;
+                        BoardPiece piece = RandomPiece();
+                        // At most two colors are forbidden, so a safe color always exists.
+                        while (WouldCreateStartingMatch(x, y, piece.ColorIndex))
+                            piece = new BoardPiece((piece.ColorIndex + 1) % colorCount);
+                        Cells[x, y] = piece;
                     }
-                if (HasMove()) return;
+                }
+
+                if (HasMove())
+                    return;
             }
+
             // Bounded fallback with a guaranteed bottom-left swap and no starting runs.
             for (int y = 0; y < Height; y++)
-                for (int x = 0; x < Width; x++) Cells[x, y] = (x + y) % types;
-            Cells[0, 0] = 0; Cells[1, 0] = 1; Cells[2, 0] = 0; Cells[1, 1] = 0;
+                for (int x = 0; x < Width; x++)
+                    Cells[x, y] = new BoardPiece((x + y) % colorCount);
+
+            Cells[0, 0] = new BoardPiece(0);
+            Cells[1, 0] = new BoardPiece(1);
+            Cells[2, 0] = new BoardPiece(0);
+            Cells[1, 1] = new BoardPiece(0);
         }
 
-        public void Swap(int x, int y, int tx, int ty)
+        private bool WouldCreateStartingMatch(int x, int y, int colorIndex)
         {
-            int value = Cells[x, y];
-            Cells[x, y] = Cells[tx, ty];
-            Cells[tx, ty] = value;
+            bool horizontal = x >= 2 &&
+                Cells[x - 1, y].ColorIndex == colorIndex && Cells[x - 2, y].ColorIndex == colorIndex;
+            bool vertical = y >= 2 &&
+                Cells[x, y - 1].ColorIndex == colorIndex && Cells[x, y - 2].ColorIndex == colorIndex;
+            return horizontal || vertical;
         }
 
-        public bool TrySwap(int x, int y, int tx, int ty)
+        public void Swap(int x, int y, int targetX, int targetY)
         {
-            if (!Contains(x, y) || !Contains(tx, ty) || Math.Abs(x - tx) + Math.Abs(y - ty) != 1)
+            BoardPiece value = Cells[x, y];
+            Cells[x, y] = Cells[targetX, targetY];
+            Cells[targetX, targetY] = value;
+        }
+
+        public bool TrySwap(int x, int y, int targetX, int targetY)
+        {
+            if (!Contains(x, y) || !Contains(targetX, targetY) ||
+                Math.Abs(x - targetX) + Math.Abs(y - targetY) != 1)
                 return false;
-            Swap(x, y, tx, ty);
-            if (FindMatches().Count > 0) return true;
-            Swap(x, y, tx, ty);
+
+            Swap(x, y, targetX, targetY);
+            if (FindMatches().Count > 0)
+                return true;
+
+            Swap(x, y, targetX, targetY);
             return false;
         }
 
-        public HashSet<int> FindMatches()
+        public MatchResult FindMatches()
         {
-            var matches = new HashSet<int>();
+            var result = new MatchResult();
+
             for (int y = 0; y < Height; y++)
+            {
                 for (int x = 0; x < Width;)
                 {
                     int end = x + 1;
-                    while (end < Width && Cells[end, y] == Cells[x, y]) end++;
-                    if (Cells[x, y] >= 0 && end - x >= 3)
-                        for (int i = x; i < end; i++) matches.Add(y * Width + i);
+                    while (end < Width && SameColor(Cells[x, y], Cells[end, y]))
+                        end++;
+                    AddGroup(result, x, y, end - x, MatchDirection.Horizontal);
                     x = end;
                 }
+            }
+
             for (int x = 0; x < Width; x++)
+            {
                 for (int y = 0; y < Height;)
                 {
                     int end = y + 1;
-                    while (end < Height && Cells[x, end] == Cells[x, y]) end++;
-                    if (Cells[x, y] >= 0 && end - y >= 3)
-                        for (int i = y; i < end; i++) matches.Add(i * Width + x);
+                    while (end < Height && SameColor(Cells[x, y], Cells[x, end]))
+                        end++;
+                    AddGroup(result, x, y, end - y, MatchDirection.Vertical);
                     y = end;
                 }
-            return matches;
+            }
+
+            return result;
+        }
+
+        private static bool SameColor(BoardPiece first, BoardPiece second) =>
+            !first.IsEmpty && !second.IsEmpty && first.ColorIndex == second.ColorIndex;
+
+        private void AddGroup(MatchResult result, int x, int y, int length, MatchDirection direction)
+        {
+            BoardPiece first = Cells[x, y];
+            if (first.IsEmpty || length < 3)
+                return;
+
+            var cellIds = new int[length];
+            for (int i = 0; i < length; i++)
+            {
+                int cellX = direction == MatchDirection.Horizontal ? x + i : x;
+                int cellY = direction == MatchDirection.Vertical ? y + i : y;
+                cellIds[i] = cellY * Width + cellX;
+            }
+
+            result.Add(new MatchGroup(first.ColorIndex, direction, cellIds));
         }
 
         public bool HasMove()
         {
             for (int y = 0; y < Height; y++)
+            {
                 for (int x = 0; x < Width; x++)
+                {
                     for (int direction = 0; direction < 2; direction++)
                     {
-                        int tx = x + (direction == 0 ? 1 : 0);
-                        int ty = y + (direction == 1 ? 1 : 0);
-                        if (!Contains(tx, ty)) continue;
-                        bool valid = TrySwap(x, y, tx, ty);
-                        if (valid) { Swap(x, y, tx, ty); return true; }
+                        int targetX = x + (direction == 0 ? 1 : 0);
+                        int targetY = y + (direction == 1 ? 1 : 0);
+                        if (!Contains(targetX, targetY))
+                            continue;
+
+                        bool valid = TrySwap(x, y, targetX, targetY);
+                        if (valid)
+                        {
+                            Swap(x, y, targetX, targetY);
+                            return true;
+                        }
                     }
+                }
+            }
+
             return false;
+        }
+
+        public ClearResult Clear(IEnumerable<int> cellIds)
+        {
+            var result = new ClearResult(colorCount);
+            var visited = new HashSet<int>();
+            foreach (int cellId in cellIds)
+            {
+                if (!visited.Add(cellId))
+                    continue;
+                int x = cellId % Width;
+                int y = cellId / Width;
+                if (!Contains(x, y) || Cells[x, y].IsEmpty)
+                    continue;
+
+                result.PieceCount++;
+                result.AddColor(Cells[x, y].ColorIndex);
+                Cells[x, y] = BoardPiece.Empty;
+                Layers[x, y] = Layers[x, y].Damage(out bool layerCleared);
+                if (layerCleared)
+                    result.LayersCleared++;
+            }
+
+            return result;
         }
 
         // Returns each destination's source row; -1 denotes a newly spawned piece.
@@ -115,17 +451,23 @@ namespace GemforgeCascade.Core
             {
                 int write = 0;
                 for (int y = 0; y < Height; y++)
-                    if (Cells[x, y] >= 0)
-                    {
-                        Cells[x, write] = Cells[x, y];
-                        sources[x, write++] = y;
-                    }
+                {
+                    if (Cells[x, y].IsEmpty)
+                        continue;
+
+                    Cells[x, write] = Cells[x, y];
+                    sources[x, write] = y;
+                    write++;
+                }
+
                 while (write < Height)
                 {
-                    Cells[x, write] = RandomType();
-                    sources[x, write++] = -1;
+                    Cells[x, write] = RandomPiece();
+                    sources[x, write] = -1;
+                    write++;
                 }
             }
+
             return sources;
         }
     }

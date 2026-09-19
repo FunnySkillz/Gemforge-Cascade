@@ -183,16 +183,16 @@ namespace GemforgeCascade.Core
                 game.Award(matches.Count, multiplier++);
                 for (float elapsed = 0; elapsed < animationDuration; elapsed += Time.deltaTime)
                 {
-                    foreach (int id in matches) pieces[id % model.Width, id / model.Width].Shrink(elapsed / animationDuration);
+                    foreach (int id in matches.Cells) pieces[id % model.Width, id / model.Width].Shrink(elapsed / animationDuration);
                     yield return null;
                 }
-                foreach (int id in matches)
+                foreach (int id in matches.Cells)
                 {
                     int x = id % model.Width, y = id / model.Width;
                     Destroy(pieces[x, y].gameObject);
                     pieces[x, y] = null;
-                    model.Cells[x, y] = -1;
                 }
+                model.Clear(matches.Cells);
                 int[,] sources = model.CollapseAndRefill();
                 var previous = pieces;
                 pieces = new Piece[model.Width, model.Height];
@@ -250,7 +250,8 @@ namespace GemforgeCascade.Core
             var piece = new GameObject("Piece").AddComponent<Piece>();
             piece.transform.SetParent(transform);
             piece.transform.position = Position(x, startY);
-            piece.Initialize(model.Cells[x, y], sprite, colors[model.Cells[x, y]], config.cellSize);
+            BoardPiece state = model.Cells[x, y];
+            piece.Initialize(state, sprite, colors[state.ColorIndex], config.cellSize);
             piece.Place(x, y, Position(x, y), instant);
             pieces[x, y] = piece;
         }

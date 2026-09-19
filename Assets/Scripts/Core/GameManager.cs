@@ -28,6 +28,33 @@ namespace GemforgeCascade.Core
             State = Score >= Target ? GameState.Won : Moves == 0 ? GameState.Lost : GameState.Playing;
             Changed?.Invoke();
         }
+        public AttemptSnapshot CreateSnapshot(BoardSnapshot board)
+        {
+            return new AttemptSnapshot
+            {
+                board = board,
+                score = Score,
+                moves = Moves,
+                targetScore = Target,
+                gameState = (int)State
+            };
+        }
+
+        public void Restore(AttemptSnapshot snapshot)
+        {
+            if (snapshot == null || snapshot.board == null)
+                throw new ArgumentException("Attempt snapshot must include board state.", nameof(snapshot));
+            if (snapshot.version != GameDataVersions.Snapshot)
+                throw new NotSupportedException($"Unsupported attempt version {snapshot.version}.");
+            if (!Enum.IsDefined(typeof(GameState), snapshot.gameState))
+                throw new ArgumentException("Attempt snapshot has an invalid game state.", nameof(snapshot));
+
+            Score = snapshot.score;
+            Moves = snapshot.moves;
+            Target = snapshot.targetScore;
+            State = (GameState)snapshot.gameState;
+            Changed?.Invoke();
+        }
         public void Restart() => RestartRequested?.Invoke();
     }
 }
