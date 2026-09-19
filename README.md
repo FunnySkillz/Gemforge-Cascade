@@ -1,38 +1,39 @@
 # Gemforge Cascade
 
-An original match-3 prototype with generated colored gems, animated swaps, gravity, cascades, limited moves and a score objective.
+An original 2D match-3 prototype with deterministic levels, combinable special gems, collection/crystal goals and a ten-level candidate chapter.
 
-## Open
+## Play
 
-Open this folder in Unity 2022.3 LTS, open `Assets/Scenes/Main.unity`, and press Play. No imported art or TMP resource setup is required.
+Open this folder in **Unity 2022.3.15f1**, open `Assets/Scenes/Main.unity`, and press Play. Use **Input Manager (Old)** or **Both** for Active Input Handling. No imported art or TMP setup is needed.
 
-Click a piece and a neighbor, or drag horizontally/vertically. Invalid swaps cost no moves. Reach 1,000 points within 25 valid moves. Cascades award 10 points per piece times the cascade multiplier (1, 2, 3, ...). Restart appears after winning or losing.
+Click a gem and its neighbor, or drag along a row/column. Invalid swaps cost no moves. Complete every displayed goal before moves run out. Four-in-line creates a line special, T/L a blast, and five-in-line a color clear. Adjacent specials combine without a color match. See the [combination contract](docs/IMPLEMENTATION_PLAN.md#special-swap-contract).
 
-## Design Documentation
+Pause with Escape or the pause button. Restart replays the same opening/refill seed. Hints and reduced motion can be toggled in pause and persist locally. Winning allows the next level for the current session; chapter progress is not yet saved.
 
-See [the design docs](docs/README.md) for the graphics/audio brief, UI/UX gaps, replayability proposals and prioritized roadmap. These describe planned improvements, not implemented features.
+## Content
 
-Project execution is tracked in [the implementation plan](docs/IMPLEMENTATION_PLAN.md). This is the source of truth for phase status, decisions and completion evidence.
+`Assets/Resources/Levels/level-*.json` contains ten validated candidate configurations with seeded openings. They are not yet a playtested, handcrafted tutorial chapter. The catalog validates candidates, skips invalid/duplicate levels with diagnostics, and orders files by name.
 
-## Level Configuration
+Use **Gemforge > Level Workshop** to load a JSON asset, paint gems/specials/crystals, edit goals, validate and save a copy. Grid rows display top to bottom; JSON cells are row-major from the bottom-left. Color indices are 0-5; layer durability 0 means empty. Baking an opening stores explicit pieces without changing the refill seed. Interactive designer acceptance is still pending.
 
-Select BoardManager in Main. Config controls width/height (3-16), piece types (3-6), cell size, moves and target score. Animation Duration controls swap/fall/clear timing.
+An optional BoardManager Level Asset overrides the chapter; otherwise Resources levels take priority over BoardConfig fallback settings. Swap, fall and clear durations are separate Inspector settings.
 
-## Scripts and Scene
+## Verification
 
-- `BoardManager.cs`: scene startup, click/drag input, animation, cascades and dead-board recovery.
-- `BoardModel.cs`: generation, legal moves, matches and gravity, independent of Unity.
-- `Piece.cs`: coordinates, type, selection and movement state, visuals.
-- `GameManager.cs`: score, remaining moves, win/loss and restart.
-- `UIManager.cs`: HUD, result overlay and restart button.
-- `BoardConfig.cs`: serialized level settings.
+Run the rules suite with .NET 8 or later:
 
-Main stores BoardManager and its configuration and is included in Build Settings. On Play it creates Main Camera, GameManager, UIManager/HUD Canvas, EventSystem and pieces. The Canvas contains score, moves, target, result text and restart. Use Input Manager or Both under Active Input Handling.
+```powershell
+dotnet run --project Tests/BoardRules/BoardRules.csproj -p:UseAppHost=false
+```
 
-## Verification and Limitations
+Use **Gemforge > Validate Chapter and Build Windows**, or invoke Unity with `-batchmode -nographics -quit -projectPath <project> -executeMethod GemforgeCascade.Editor.BuildVerification.BuildWindows -logFile <log>`.
 
-Run `dotnet run --project Tests/BoardRules/BoardRules.csproj` with .NET 8 or later. Tests exercise the actual board rules and GameManager (with minimal host types): 200 seeded boards, 2,000 turns, invalid rollback, gravity order, match intersections, cascade settling and final-move outcomes.
+The development executable is generated at `Builds/Windows/GemforgeCascade.exe`. Its `-gemforgeSmoke` flag checks startup, a full turn, pause rejection, same-seed retry, chapter simulation and offscreen scene/UI captures. Run it from the project directory so captures go into `Logs`. Both folders are gitignored; build artifacts are not uploaded to GitHub.
 
-Unity is not installed on the implementation machine. Editor compilation, scene import, input and rendering still need an Editor smoke test. Standalone tests do not validate Unity APIs or visuals.
+Unity import and Windows builds have been verified locally. Automated game-state smoke checks pass in portrait and landscape. Real pointer/touch interaction, Android builds, mobile safe areas and device performance still require acceptance. Hidden-window captures use offscreen cameras and do not establish real display/input correctness.
 
-Dead boards regenerate with no matches and a legal move; the previous color inventory is not preserved. Special pieces, blockers, audio and additional levels are deferred. Touch relies on Unity mouse emulation; mouse is the primary input.
+## Delivery Plan
+
+[IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) is the source of truth for phases, status and evidence. [Implementation review](docs/implementation-review.md) records the manual-change audit and remaining risks. Supporting [design documents](docs/README.md) describe the intended product, not completed features.
+
+Remaining major work: handcrafted teaching layouts and balance, final art/audio/VFX, stable-turn saves, chapter map/workshop rewards, analytics and mobile QA. Dead-board recovery currently regenerates the board and loses special inventory; this needs a player-friendly treatment.

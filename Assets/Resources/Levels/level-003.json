@@ -1,0 +1,220 @@
+{
+  "id": "level-003",
+  "title": "Crystal Work",
+  "width": 7,
+  "height": 7,
+  "colorCount": 5,
+  "moves": 18,
+  "targetScore": 1200,
+  "seed": 303,
+  "objectives": [
+    {
+      "kind": 0,
+      "target": 1200
+    },
+    {
+      "kind": 2,
+      "target": 4
+    }
+  ],
+  "startingPieces": [],
+  "startingLayers": [
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 1,
+      "durability": 1
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 1,
+      "durability": 1
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 1,
+      "durability": 1
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 1,
+      "durability": 1
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 1,
+      "durability": 1
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 1,
+      "durability": 1
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 1,
+      "durability": 1
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 1,
+      "durability": 1
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    }
+  ],
+  "version": 2
+}

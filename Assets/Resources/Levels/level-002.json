@@ -1,0 +1,169 @@
+{
+  "id": "level-002",
+  "title": "River of Gems",
+  "width": 6,
+  "height": 6,
+  "colorCount": 4,
+  "moves": 16,
+  "targetScore": 1000,
+  "seed": 202,
+  "objectives": [
+    {
+      "kind": 0,
+      "target": 1000
+    },
+    {
+      "kind": 1,
+      "colorIndex": 2,
+      "target": 9
+    }
+  ],
+  "startingPieces": [],
+  "startingLayers": [
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    }
+  ],
+  "version": 2
+}

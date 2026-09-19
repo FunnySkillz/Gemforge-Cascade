@@ -1,0 +1,281 @@
+{
+  "id": "level-006",
+  "title": "Twin Thread",
+  "width": 8,
+  "height": 8,
+  "colorCount": 5,
+  "moves": 20,
+  "targetScore": 1700,
+  "seed": 606,
+  "objectives": [
+    {
+      "kind": 0,
+      "target": 1700
+    },
+    {
+      "kind": 1,
+      "colorIndex": 4,
+      "target": 12
+    }
+  ],
+  "startingPieces": [],
+  "startingLayers": [
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    },
+    {
+      "kind": 0,
+      "durability": 0
+    }
+  ],
+  "version": 2
+}

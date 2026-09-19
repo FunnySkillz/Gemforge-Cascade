@@ -162,6 +162,14 @@ namespace GemforgeCascade.Core
                 if (objective.kind == (int)ObjectiveKind.CollectColor &&
                     (objective.colorIndex < 0 || objective.colorIndex >= source.colorCount))
                     result.Error("OBJECTIVE_COLOR_INVALID", "Collect objective uses an unavailable color.");
+                if (objective.kind == (int)ObjectiveKind.ClearLayers)
+                {
+                    int available = 0;
+                    foreach (var layer in source.startingLayers)
+                        if (layer != null && layer.kind != 0 && layer.durability > 0) available++;
+                    if (objective.target > available)
+                        result.Error("LAYER_GOAL_IMPOSSIBLE", "Layer target exceeds the number of occupied layer cells.");
+                }
             }
         }
 
@@ -201,29 +209,32 @@ namespace GemforgeCascade.Core
             var tracker = new ObjectiveTracker(level.objectives, level.colorCount);
             var result = new BoardSimulationResult();
 
-            for (int turn = 0; turn < maximumTurns; turn++)
+            for (int turn = 0; turn < Math.Min(maximumTurns, level.moves); turn++)
             {
-                if (!TryFirstLegalSwap(board))
+                if (!board.TryGetLegalMove(out int from, out int to))
                 {
                     board.Generate();
                     result.Reshuffles++;
-                    if (!TryFirstLegalSwap(board))
+                    if (!board.TryGetLegalMove(out from, out to))
                         break;
                 }
 
+                board.TrySwap(from % board.Width, from / board.Width, to % board.Width, to / board.Width,
+                    out MatchResolution resolution);
+
                 result.TurnsPlayed++;
                 int multiplier = 1;
-                MatchResult matches = board.FindMatches();
-                while (matches.Count > 0)
+                while (resolution != null && resolution.AffectedCells.Count > 0)
                 {
-                    MatchResolution resolution = board.PlanMatchResolution(matches);
+                    if (multiplier > 512) throw new InvalidOperationException("Cascade exceeded 512 steps.");
                     ClearResult clear = board.ApplyMatchResolution(resolution);
                     result.PiecesCleared += clear.PieceCount;
                     result.Score += clear.PieceCount * 10 * multiplier++;
                     result.CascadeSteps++;
                     tracker.Apply(clear, result.Score);
                     board.CollapseAndRefill();
-                    matches = board.FindMatches();
+                    MatchResult matches = board.FindMatches();
+                    resolution = matches.Count > 0 ? board.PlanMatchResolution(matches) : null;
                 }
 
                 result.ObjectivesComplete = tracker.Objectives.Count > 0
@@ -236,18 +247,5 @@ namespace GemforgeCascade.Core
             return result;
         }
 
-        private static bool TryFirstLegalSwap(BoardModel board)
-        {
-            for (int y = 0; y < board.Height; y++)
-                for (int x = 0; x < board.Width; x++)
-                    for (int direction = 0; direction < 2; direction++)
-                    {
-                        int targetX = x + (direction == 0 ? 1 : 0);
-                        int targetY = y + (direction == 1 ? 1 : 0);
-                        if (board.Contains(targetX, targetY) && board.TrySwap(x, y, targetX, targetY))
-                            return true;
-                    }
-            return false;
-        }
     }
 }

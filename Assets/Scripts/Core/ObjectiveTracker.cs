@@ -91,5 +91,22 @@ namespace GemforgeCascade.Core
                 }
             }
         }
+
+        public int[] Capture()
+        {
+            var values = new int[objectives.Count];
+            for (int i = 0; i < values.Length; i++) values[i] = objectives[i].Current;
+            return values;
+        }
+
+        public void Restore(int[] values)
+        {
+            if (values == null || values.Length != objectives.Count)
+                throw new InvalidOperationException("Saved objectives do not match the level.");
+            for (int i = 0; i < values.Length; i++)
+                if (values[i] < 0 || values[i] > objectives[i].Target)
+                    throw new InvalidOperationException("Invalid saved objective progress.");
+            for (int i = 0; i < values.Length; i++) objectives[i].Current = values[i];
+        }
     }
 }

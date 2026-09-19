@@ -351,13 +351,32 @@ namespace GemforgeCascade.Core
 
         public bool TrySwap(int x, int y, int targetX, int targetY)
         {
+            return TrySwap(x, y, targetX, targetY, out _);
+        }
+
+        // The first resolution is shared by the player, hints, validator and simulator.
+        public bool TrySwap(int x, int y, int targetX, int targetY, out MatchResolution resolution)
+        {
+            resolution = null;
             if (!Contains(x, y) || !Contains(targetX, targetY) ||
-                Math.Abs(x - targetX) + Math.Abs(y - targetY) != 1)
+                Math.Abs(x - targetX) + Math.Abs(y - targetY) != 1 ||
+                Cells[x, y].IsEmpty || Cells[targetX, targetY].IsEmpty)
                 return false;
 
             Swap(x, y, targetX, targetY);
-            if (FindMatches().Count > 0)
+            resolution = PlanCombination(y * Width + x, targetY * Width + targetX);
+            if (resolution != null)
                 return true;
+
+            MatchResult matches = FindMatches();
+            bool involvesSwap = false;
+            foreach (int id in matches.Cells)
+                if (id == y * Width + x || id == targetY * Width + targetX) involvesSwap = true;
+            if (involvesSwap)
+            {
+                resolution = PlanMatchResolution(matches, targetY * Width + targetX);
+                return true;
+            }
 
             Swap(x, y, targetX, targetY);
             return false;
@@ -503,10 +522,11 @@ namespace GemforgeCascade.Core
             return -1;
         }
 
-        private void ExpandSpecials(HashSet<int> affected)
+        private void ExpandSpecials(HashSet<int> affected, HashSet<int> consumed = null,
+            Dictionary<int, BoardPiece> converted = null)
         {
             var pending = new Queue<int>(affected);
-            var activated = new HashSet<int>();
+            var activated = consumed == null ? new HashSet<int>() : new HashSet<int>(consumed);
             while (pending.Count > 0)
             {
                 int cellId = pending.Dequeue();
@@ -518,7 +538,9 @@ namespace GemforgeCascade.Core
                 if (!Contains(x, y))
                     continue;
 
-                SpecialKind special = Cells[x, y].Special;
+                BoardPiece piece = converted != null && converted.TryGetValue(cellId, out BoardPiece replacement)
+                    ? replacement : Cells[x, y];
+                SpecialKind special = piece.Special;
                 if (special == SpecialKind.RowClear)
                 {
                     for (int rowX = 0; rowX < Width; rowX++)
@@ -542,13 +564,93 @@ namespace GemforgeCascade.Core
                 }
                 else if (special == SpecialKind.ColorClear)
                 {
-                    int color = Cells[x, y].ColorIndex;
+                    int color = piece.ColorIndex;
                     for (int colorY = 0; colorY < Height; colorY++)
                         for (int colorX = 0; colorX < Width; colorX++)
                             if (!Cells[colorX, colorY].IsEmpty && Cells[colorX, colorY].ColorIndex == color)
                                 AddAffected(affected, pending, colorY * Width + colorX);
                 }
             }
+        }
+
+        private MatchResolution PlanCombination(int source, int destination)
+        {
+            if (!Contains(source % Width, source / Width) || !Contains(destination % Width, destination / Width))
+                return null;
+
+            BoardPiece first = Cells[destination % Width, destination / Width];
+            BoardPiece second = Cells[source % Width, source / Width];
+            bool colorClear = first.Special == SpecialKind.ColorClear || second.Special == SpecialKind.ColorClear;
+            if (!colorClear && (first.Special == SpecialKind.None || second.Special == SpecialKind.None))
+                return null;
+
+            var affected = new HashSet<int> { source, destination };
+            var converted = new Dictionary<int, BoardPiece>();
+            int centerX = destination % Width;
+            int centerY = destination / Width;
+
+            if (first.Special == SpecialKind.ColorClear && second.Special == SpecialKind.ColorClear)
+            {
+                for (int id = 0; id < Width * Height; id++) affected.Add(id);
+            }
+            else if (colorClear)
+            {
+                BoardPiece partner = first.Special == SpecialKind.ColorClear ? second : first;
+                int color = partner.ColorIndex;
+                for (int y = 0; y < Height; y++)
+                    for (int x = 0; x < Width; x++)
+                    {
+                        BoardPiece piece = Cells[x, y];
+                        if (!piece.IsEmpty && piece.ColorIndex == color)
+                        {
+                            int id = y * Width + x;
+                            affected.Add(id);
+                            if (partner.Special != SpecialKind.None)
+                                converted[id] = new BoardPiece(piece.ColorIndex, partner.Special);
+                        }
+                    }
+            }
+            else if (first.Special == SpecialKind.Blast && second.Special == SpecialKind.Blast)
+            {
+                for (int y = centerY - 2; y <= centerY + 2; y++)
+                    for (int x = centerX - 2; x <= centerX + 2; x++)
+                        if (Contains(x, y)) affected.Add(y * Width + x);
+            }
+            else if (first.Special == SpecialKind.Blast || second.Special == SpecialKind.Blast)
+            {
+                for (int y = 0; y < Height; y++)
+                    for (int x = 0; x < Width; x++)
+                        if (Math.Abs(x - centerX) <= 1 || Math.Abs(y - centerY) <= 1)
+                            affected.Add(y * Width + x);
+            }
+            else
+            {
+                for (int x = 0; x < Width; x++) affected.Add(centerY * Width + x);
+                for (int y = 0; y < Height; y++)
+                    affected.Add(y * Width + centerX);
+            }
+
+            // Both swapped specials are consumed; other hit specials activate once.
+            ExpandSpecials(affected, new HashSet<int> { source, destination }, converted);
+            var removed = new HashSet<int>(affected);
+            return new MatchResolution(affected, removed, new Dictionary<int, BoardPiece>());
+        }
+
+        public bool TryGetLegalMove(out int source, out int destination)
+        {
+            for (int y = 0; y < Height; y++)
+                for (int x = 0; x < Width; x++)
+                    for (int direction = 0; direction < 2; direction++)
+                    {
+                        int tx = x + (direction == 0 ? 1 : 0), ty = y + (direction == 1 ? 1 : 0);
+                        if (!TrySwap(x, y, tx, ty)) continue;
+                        Swap(x, y, tx, ty);
+                        source = y * Width + x;
+                        destination = ty * Width + tx;
+                        return true;
+                    }
+            source = destination = -1;
+            return false;
         }
 
         private static void AddAffected(HashSet<int> affected, Queue<int> pending, int cellId)

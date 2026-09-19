@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Text.Json;
 using GemforgeCascade.Core;
 
@@ -42,8 +43,10 @@ internal static class Program
         ExerciseStructuredMatches();
         ExerciseSpecialState();
         ExerciseLineSpecials();
+        ExerciseSpecialCombinations();
         ExerciseBlastAndColorSpecials();
         ExerciseLayersAndObjectives();
+        ExerciseAuthoredLevels();
         ExerciseLevelValidation();
         ExerciseGameState();
 
@@ -387,6 +390,112 @@ internal static class Program
             "Vertical four created wrong special");
     }
 
+    private static void ExerciseSpecialCombinations()
+    {
+        for (int a = 1; a <= 4; a++)
+            for (int b = 1; b <= 4; b++)
+                for (int edge = 0; edge < 2; edge++)
+                {
+                    var board = new BoardModel(7, 7, 6, 42);
+                    int cx = edge == 0 ? 3 : 1, cy = edge == 0 ? 3 : 0;
+                    for (int y = 0; y < 7; y++)
+                        for (int x = 0; x < 7; x++) board.Cells[x, y] = new BoardPiece((x + y * 2) % 6);
+                    board.Cells[cx - 1, cy] = new BoardPiece(0, (SpecialKind)a);
+                    board.Cells[cx, cy] = new BoardPiece(1, (SpecialKind)b);
+                    var before = (BoardPiece[,])board.Cells.Clone();
+                    uint rng = board.CreateSnapshot("combo").randomState;
+                    Check(board.TryGetLegalMove(out _, out _), "Combo board has no hint");
+                    Equal(before, board.Cells);
+                    Check(rng == board.CreateSnapshot("combo").randomState, "Hint consumed RNG");
+                    Check(board.TrySwap(cx - 1, cy, cx, cy, out var resolution), "Special pair rejected");
+                    var expected = new System.Collections.Generic.HashSet<int> { cy * 7 + cx - 1, cy * 7 + cx };
+                    if (a == 4 && b == 4)
+                        for (int id = 0; id < 49; id++) expected.Add(id);
+                    else if (a == 4 || b == 4)
+                    {
+                        int color = a == 4 ? 1 : 0, kind = a == 4 ? b : a;
+                        for (int y = 0; y < 7; y++)
+                            for (int x = 0; x < 7; x++)
+                            {
+                                int id = y * 7 + x;
+                                if (board.Cells[x, y].ColorIndex != color || id == cy * 7 + cx || id == cy * 7 + cx - 1) continue;
+                                expected.Add(id);
+                                for (int ty = 0; ty < 7; ty++)
+                                    for (int tx = 0; tx < 7; tx++)
+                                        if ((kind == 1 && ty == y) || (kind == 2 && tx == x) ||
+                                            (kind == 3 && Math.Abs(tx - x) <= 1 && Math.Abs(ty - y) <= 1)) expected.Add(ty * 7 + tx);
+                            }
+                    }
+                    else
+                        for (int y = 0; y < 7; y++)
+                            for (int x = 0; x < 7; x++)
+                            {
+                                bool hit = a == 3 && b == 3 ? Math.Abs(x - cx) <= 2 && Math.Abs(y - cy) <= 2 :
+                                    a == 3 || b == 3 ? Math.Abs(x - cx) <= 1 || Math.Abs(y - cy) <= 1 : x == cx || y == cy;
+                                if (hit) expected.Add(y * 7 + x);
+                            }
+                    Check(expected.SetEquals(resolution.AffectedCells), $"Wrong combo footprint {a}+{b}, edge={edge}");
+                    Check(resolution.CreatedPieces.Count == 0, "Combo left a reusable special");
+                    Check(board.ApplyMatchResolution(resolution).PieceCount == expected.Count, "Combo double-counted cells");
+                }
+
+        foreach (bool reverse in new[] { false, true })
+        {
+            var board = new BoardModel(5, 5, 6, 42);
+            for (int y = 0; y < 5; y++)
+                for (int x = 0; x < 5; x++) board.Cells[x, y] = new BoardPiece((x + y) % 6);
+            board.Cells[1, 1] = new BoardPiece(0, SpecialKind.ColorClear);
+            board.Cells[2, 1] = new BoardPiece(1);
+            Check(board.TrySwap(reverse ? 2 : 1, 1, reverse ? 1 : 2, 1, out var resolution), "Color + normal rejected");
+            foreach (int id in resolution.AffectedCells)
+                Check(id == 7 || board.Cells[id % 5, id / 5].ColorIndex == 1,
+                    "Color clear removed unrelated color");
+        }
+        var chained = new BoardModel(5, 5, 6, 42);
+        chained.Cells[0, 0] = new BoardPiece(0, SpecialKind.ColorClear);
+        chained.Cells[1, 0] = new BoardPiece(1);
+        chained.Cells[2, 4] = new BoardPiece(1, SpecialKind.RowClear);
+        Check(chained.TrySwap(0, 0, 1, 0, out var chain), "Color/normal chain swap rejected");
+        for (int x = 0; x < 5; x++)
+            Check(System.Linq.Enumerable.Contains(chain.AffectedCells, 20 + x), "Color clear suppressed an existing matching-color special");
+    }
+
+    private static void ExerciseAuthoredLevels()
+    {
+        string root = Path.Combine(
+            AppContext.BaseDirectory,
+            "..", "..", "..", "..", "..",
+            "Assets", "Resources", "Levels");
+
+        string[] files = Directory.GetFiles(root, "*.json");
+        Check(files.Length >= 10, "The starter chapter does not contain the expected 10 authored levels");
+
+        foreach (string file in files)
+        {
+            string name = Path.GetFileName(file);
+            string json = File.ReadAllText(file);
+            var level = JsonSerializer.Deserialize<LevelDefinition>(json, new JsonSerializerOptions { IncludeFields = true });
+            Check(level != null, $"Level {name} did not deserialize");
+
+            GameDataMigrations.Upgrade(level);
+            var validation = LevelValidator.Validate(level);
+            if (!validation.IsValid)
+            {
+                string details = string.Empty;
+                foreach (var issue in validation.Issues)
+                    details += $"{issue.Code}:{issue.Message}; ";
+                throw new Exception($"Level {name} failed validation: {details}");
+            }
+
+            var board = BoardModel.FromLevel(level);
+            Check(board.FindMatches().Count == 0, $"Level {name} starts with an auto-match");
+            Check(board.HasMove(), $"Level {name} starts with no legal move");
+            var simulation = BoardSimulator.Run(level, level.moves + 10);
+            Check(simulation.TurnsPlayed <= level.moves, "Simulation exceeded move budget");
+            Console.WriteLine($"{level.id}: {validation.LegalMoveCount} opening moves; first-legal policy score={simulation.Score}, won={simulation.ObjectivesComplete}");
+        }
+    }
+
     private static void ExerciseDeterministicRandom()
     {
         var first = new BoardModel(8, 8, 6, 123456);
@@ -471,10 +580,42 @@ internal static class Program
         Check(restoredGame.Moves == game.Moves, "Saved moves did not restore");
         Check(restoredGame.Target == game.Target, "Saved target did not restore");
         Check(restoredGame.State == game.State, "Saved game state did not restore");
+
+        var objectiveLevel = new LevelDefinition
+        {
+            moves = 1, targetScore = 99999,
+            objectives = new[]
+            {
+                new ObjectiveData { kind = (int)ObjectiveKind.CollectColor, colorIndex = 0, target = 3 },
+                new ObjectiveData { kind = (int)ObjectiveKind.ClearLayers, target = 1 }
+            }
+        };
+        game.Begin(objectiveLevel);
+        Empty(board);
+        for (int x = 0; x < 3; x++) board.Cells[x, 0] = new BoardPiece(0);
+        board.Layers[0, 0] = new CellLayer(CellLayerKind.Crystal, 1);
+        game.ConsumeMove();
+        game.Award(board.Clear(new[] { 0, 1, 2 }), 1);
+        Check(game.State == GameState.Playing, "Objective win evaluated before turn settled");
+        savedAttempt = game.CreateSnapshot(board.CreateSnapshot(objectiveLevel.id));
+        restoredGame.Begin(objectiveLevel);
+        restoredGame.Restore(savedAttempt);
+        Check(restoredGame.Objectives.Complete, "Saved collect/layer progress lost");
+        restoredGame.FinishTurn();
+        Check(restoredGame.State == GameState.Won, "Final-move objective win did not override score target");
+        savedAttempt.score = 1234;
+        savedAttempt.objectiveProgress = new[] { -1, 1 };
+        bool rejected = false;
+        try { restoredGame.Restore(savedAttempt); } catch (InvalidOperationException) { rejected = true; }
+        Check(rejected && restoredGame.Score == 30, "Invalid snapshot partially changed game state");
     }
 
     private static void ExerciseLevelValidation()
     {
+        Check(LevelValidator.Validate(new LevelDefinition
+        {
+            objectives = new[] { new ObjectiveData { kind = (int)ObjectiveKind.ClearLayers, target = 1 } }
+        }).HasCode("LAYER_GOAL_IMPOSSIBLE"), "Impossible layer goal accepted");
         var valid = new LevelDefinition
         {
             id = "validation-generated",

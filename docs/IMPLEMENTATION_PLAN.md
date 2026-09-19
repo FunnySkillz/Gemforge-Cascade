@@ -26,22 +26,22 @@ Only mark work `DONE` with evidence. Passing pure .NET rules tests does not prov
 
 | Item | State |
 | --- | --- |
-| Active phase | Phase 2 - Competitive core (engine-independent work) |
-| Current task | `P2.3` special-to-special combinations |
-| Last completed task | `P2.2` blast and color-clear specials |
-| Primary blocker | Unity 2022.3 LTS/Hub is not installed or available on PATH |
-| Next review gate | P2.3 combination matrix is defined and all interactions pass tests |
+| Active phase | Phase 0 runtime verification and Phase 2 chapter integration |
+| Current task | `P2.7` intentional opening layouts and chapter playtesting |
+| Last completed task | Windows development build and runtime turn/pause/retry smoke |
+| Primary blocker | Android Build Support and target-device testing are missing; Unity itself works |
+| Next review gate | Validate teaching sequence and completion paths for all ten levels |
 
 ## Phase overview
 
 | Phase | Outcome | Status |
 | --- | --- | --- |
-| 0. Establish reality | Existing prototype compiles, runs and is captured on target hardware | `BLOCKED` |
-| 1. Board architecture | Model supports structured matches, specials, deterministic levels and validation | `BLOCKED` |
+| 0. Establish reality | Existing prototype compiles, runs and is captured on target hardware | `IN PROGRESS` |
+| 1. Board architecture | Model supports structured matches, specials, deterministic levels and validation | `IN PROGRESS` |
 | 2. Competitive core | Specials, combinations, objectives and ten authored levels are playable | `IN PROGRESS` |
-| 3. Feel and identity | Production board art, animation, audio, VFX and accessible feedback | `NOT STARTED` |
-| 4. Player journey | Tutorial, progression, workshop, results, settings and persistence | `NOT STARTED` |
-| 5. Measurement and quality | Analytics, automated Unity tests, builds and device quality gates | `NOT STARTED` |
+| 3. Feel and identity | Production board art, animation, audio, VFX and accessible feedback | `IN PROGRESS` |
+| 4. Player journey | Tutorial, progression, workshop, results, settings and persistence | `IN PROGRESS` |
+| 5. Measurement and quality | Analytics, automated Unity tests, builds and device quality gates | `IN PROGRESS` |
 | 6. Forge experiment | Signature Forge mechanic validated against the core version | `NOT STARTED` |
 | 7. Limited release | Store-ready external build and evidence-based product review | `NOT STARTED` |
 | 8. Expansion decision | Premium expansion or live-service path selected from evidence | `DEFERRED` |
@@ -52,12 +52,12 @@ Outcome: the inherited prototype is known to compile and behave correctly in the
 
 | ID | Deliverable | Status | Evidence / blocker |
 | --- | --- | --- | --- |
-| P0.1 | Open and import with the pinned Unity version | `BLOCKED` | Unity 2022.3 LTS is unavailable on this machine |
-| P0.2 | Resolve all Unity compile/import errors and warnings | `BLOCKED` | Depends on P0.1 |
-| P0.3 | Create Android and desktop development builds | `BLOCKED` | Depends on P0.1-P0.2 |
-| P0.4 | Smoke-test click, touch, pause/resume, restart, safe areas and aspect ratios | `BLOCKED` | Depends on P0.3 and devices/emulators |
+| P0.1 | Open and import with the pinned Unity version | `DONE` | Installed/pinned 2022.3.15f1 imports and builds successfully |
+| P0.2 | Resolve all Unity compile/import errors and warnings | `IN PROGRESS` | No C# compile errors; invalid modules, YAML buildNumber and input backend fixed. Unity cloud-config DNS warning remains external |
+| P0.3 | Create Android and desktop development builds | `IN PROGRESS` | Windows development build passes; installed modules are Windows/WebGL only |
+| P0.4 | Smoke-test click, touch, pause/resume, restart, safe areas and aspect ratios | `IN PROGRESS` | Automated runtime move/pause/retry pass at 720x960 and 1280x720; actual pointer/touch and mobile safe-area tests remain |
 | P0.5 | Exercise pure board and game-state rules outside Unity | `DONE` | `dotnet run --project Tests/BoardRules/BoardRules.csproj`; 200 seeded boards and 2,000 turns pass |
-| P0.6 | Capture baseline gameplay and first-use observations | `BLOCKED` | Depends on P0.2-P0.4 |
+| P0.6 | Capture baseline gameplay and first-use observations | `IN PROGRESS` | Development offscreen capture harness added; uncoached first-use sessions remain |
 
 Exit criteria:
 
@@ -80,7 +80,7 @@ Outcome: the rule model can represent the planned game without encoding presenta
 | P1.4 | Define versioned level data and stable-board snapshot formats | `DONE` | JSON round-trip, replay and legacy/future-version tests pass outside Unity |
 | P1.5 | Add objectives and cell layers as explicit model concepts | `DONE` | Score, collection, multi-hit layer and deduplicated-clear tests pass |
 | P1.6 | Build level validation and simulation APIs | `DONE` | Invalid, pre-matched, dead and one-move configurations receive coded results; deterministic simulation is tested |
-| P1.7 | Build a minimal Unity level-authoring tool | `BLOCKED` | Tool can be coded, but acceptance requires Unity import and designer use; depends on P0.1 |
+| P1.7 | Build a minimal Unity level-authoring tool | `IN PROGRESS` | Gemforge > Level Workshop edits opening gems, specials, crystal durability and goals; compile validated, interactive designer acceptance pending |
 
 Exit criteria:
 
@@ -98,12 +98,12 @@ Outcome: ten authored levels offer real planning choices and introduce mechanics
 | --- | --- | --- |
 | P2.1 | Four-in-line creates horizontal/vertical line-clear specials | `DONE` |
 | P2.2 | T/L creates blast special; five-in-line creates color clear | `DONE` |
-| P2.3 | Define and implement every special-to-special combination | `NOT STARTED` |
-| P2.4 | Implement collect-color objective | `NOT STARTED` |
-| P2.5 | Implement clear-layer objective | `NOT STARTED` |
+| P2.3 | Define and implement every special-to-special combination | `DONE` |
+| P2.4 | Implement collect-color objective | `DONE` |
+| P2.5 | Implement clear-layer objective | `DONE` |
 | P2.6 | Add blockers needed by the first ten levels | `NOT STARTED` |
-| P2.7 | Author and validate ten tutorial-to-mastery levels | `NOT STARTED` |
-| P2.8 | Add hints based on legal moves, without selecting the best move | `NOT STARTED` |
+| P2.7 | Author and validate ten tutorial-to-mastery levels | `IN PROGRESS` |
+| P2.8 | Add hints based on legal moves, without selecting the best move | `IN PROGRESS` |
 
 Exit criteria:
 
@@ -118,12 +118,12 @@ Outcome: the game is readable and satisfying at production target resolution.
 
 | ID | Deliverable | Status |
 | --- | --- | --- |
-| P3.1 | Six original gem silhouettes with non-color identifiers | `NOT STARTED` |
-| P3.2 | Board sockets, frame and magical-workshop background | `NOT STARTED` |
-| P3.3 | Separate swap, rejection, clear, fall and landing curves | `NOT STARTED` |
-| P3.4 | Selection, clear, cascade and special VFX | `NOT STARTED` |
+| P3.1 | Six original gem silhouettes with non-color identifiers | `IN PROGRESS` |
+| P3.2 | Board sockets, frame and magical-workshop background | `IN PROGRESS` |
+| P3.3 | Separate swap, rejection, clear, fall and landing curves | `IN PROGRESS` |
+| P3.4 | Selection, clear, cascade and special VFX | `IN PROGRESS` |
 | P3.5 | Layered SFX, music, mixer controls and optional haptics | `NOT STARTED` |
-| P3.6 | Reduced-motion and color-vision-readable presentation | `NOT STARTED` |
+| P3.6 | Reduced-motion and color-vision-readable presentation | `IN PROGRESS` |
 
 Exit criteria:
 
@@ -139,11 +139,11 @@ Outcome: players understand why they are playing, see progress and can leave and
 | ID | Deliverable | Status |
 | --- | --- | --- |
 | P4.1 | Objective preview and guided first level | `NOT STARTED` |
-| P4.2 | Responsive HUD with objective progress and chain feedback | `NOT STARTED` |
-| P4.3 | Pause, settings, retry, result and next-level flows | `NOT STARTED` |
+| P4.2 | Responsive HUD with objective progress and chain feedback | `IN PROGRESS` |
+| P4.3 | Pause, settings, retry, result and next-level flows | `IN PROGRESS` |
 | P4.4 | Ten-level chapter map | `NOT STARTED` |
 | P4.5 | Compact workshop restoration rewards | `NOT STARTED` |
-| P4.6 | Versioned local progress, settings and stable-turn resume | `NOT STARTED` |
+| P4.6 | Versioned local progress, settings and stable-turn resume | `IN PROGRESS` |
 | P4.7 | Personal best and authored mastery thresholds | `NOT STARTED` |
 
 Exit criteria:
@@ -227,7 +227,7 @@ Choose one path explicitly:
 | 2026-09-19 | Keep monetization and live operations out of the first slice | Audience, feel and differentiation are not yet validated |
 | 2026-09-19 | Treat this file as delivery source of truth | Plans and status need one updateable location |
 | 2026-09-19 | Continue engine-independent Phase 1 while Phase 0 is blocked | Pure model work and tests are useful without claiming Unity validation |
-| 2026-09-19 | Use special precedence Blast > Color Clear > Line Clear | Intersecting shapes produce one clear result; straight five-plus outranks straight four |
+| 2026-09-19 | Creation precedence is distinct from activation combinations | T/L produces blast; straight five-plus produces color clear; swapped specials use the explicit matrix below |
 | 2026-09-19 | Blast uses a 3x3 area; matched Color Clear removes its own color | Bounded, readable prototype rules that can be tuned after playtesting |
 
 ## Open decisions
@@ -251,6 +251,43 @@ Choose one path explicitly:
 | 2026-09-19 | Completed P1.6 validation and deterministic simulation | 5,935,670 assertions pass; P1.7 blocked on Unity, begin P2.1 rules |
 | 2026-09-19 | Completed P2.1 line-special rules and runtime flow | Preferred-cell creation, row/column activation, chain reaction and layer-hit tests pass; prototype marker added |
 | 2026-09-19 | Completed P2.2 blast and color-clear rules | T/L and five-match creation, survival and activation tests pass; 5,935,697 total assertions |
+| 2026-09-19 | Completed P2.3 special-to-special combination matrix | Row/column, row/color, blast/color and blast/blast precedence verified with rule tests; combination planner is implemented and tested |
+| 2026-09-19 | Audited manual chapter/catalog/combo changes and corrected earlier completion claims | See [review and verification](implementation-review.md); ten files were valid seeded configurations, not handcrafted openings |
+| 2026-09-19 | Replaced combo precedence shortcut with actual swap effects | All 16 ordered special pairs at center/edge, normal/color swaps in both directions, consumption and hint non-mutation tested |
+| 2026-09-19 | Integrated color/layer goals, HUD, pause, same-seed retry, hints and candidate chapter | Final-move mixed-objective and snapshot-progress tests pass; UI/device acceptance remains open |
+| 2026-09-19 | Removed stale Unity-unavailable blocker | Installed 2022.3.15f1 builds Windows; input setting corrected; development runtime smoke passes |
+
+## Current implementation evidence
+
+- Rule suite: `dotnet run --project Tests/BoardRules/BoardRules.csproj -p:UseAppHost=false`; 5,937,523 assertions. The 2,000-turn legacy stress loop uses plain clears, while dedicated tests cover specials, including color-clear chaining into existing specials. Assertion count alone is not coverage.
+- All ten JSON levels validate in .NET and Unity. First-legal-move simulation wins 001-007 and 009 within their move budgets; 008/010 fail that policy. This is not a human balance study or a proof that those levels are unwinnable.
+- P2.4/P2.5: runtime awards apply collection/layer progress and all goals gate the end state; tests cover last-move wins, multi-hit layers and restoring objective progress.
+- P2.8: optional hint after six idle seconds, cancelled by interaction/pause; legal-move search preserves board and RNG. Visual timing acceptance pending.
+- Settings persist hints/reduced motion only. Chapter progress and stable-turn disk resume are **not implemented**. Snapshot DTO support is not a save system.
+- P3 remains prototype art: six procedural silhouettes, crystal-colored sockets, separate timing settings and selection/hint outline. No production VFX, sound, music or workshop backdrop yet.
+- Local evidence lives in ignored `Logs/build-verification.log`, `Logs/smoke-portrait.log`, `Logs/smoke-landscape.log`; executable in `Builds/Windows/GemforgeCascade.exe`.
+- Nonblank offscreen scene/UI captures at 720x960 and 1280x720 were inspected: all opening cells and HUD/pause controls are visible without overlap. The harness changes the overlay canvas to a capture camera temporarily; this is not a substitute for physical display/input testing.
+
+## Special swap contract
+
+Every combo consumes both endpoints; affected cells, score and layer hits are deduplicated per resolution. Effects are centered on the destination of the dragged gem and clipped at board edges. Ordinary cascades can still create new specials afterward.
+
+| Pair (either order) | Effect |
+| --- | --- |
+| Line + line (any orientation) | One full row and column |
+| Line + blast | Three full rows and three full columns |
+| Blast + blast | 5x5 area |
+| Color + normal | Clear the normal gem's color |
+| Color + line/blast | Convert matching-color gems virtually to that special and activate them; endpoints are consumed |
+| Color + color | Entire board |
+
+## Immediate next steps
+
+1. Handcraft and playtest the first three teaching layouts using Level Workshop; then verify completion paths and teaching intent for all ten candidates.
+2. Complete pointer-driven Unity tests, focus-loss and mid-animation pause/retry, result/next-level flows and interactive authoring acceptance.
+3. Add readable special activation effects and sound with independent controls; tune from recorded play sessions, not an arbitrary "10/10" claim.
+4. Implement saved chapter progress and stable-turn recovery before map/workshop expansion.
+5. Install Android Build Support and run touch, safe-area, performance and lifecycle tests on target hardware.
 
 ## Update checklist
 

@@ -67,6 +67,7 @@ namespace GemforgeCascade.Core
     {
         public int version = GameDataVersions.Level;
         public string id = "level-001";
+        public string title = "First Spark";
         public int width = 8;
         public int height = 8;
         public int colorCount = 6;
@@ -100,6 +101,7 @@ namespace GemforgeCascade.Core
         public int moves;
         public int targetScore;
         public int gameState;
+        public int[] objectiveProgress = new int[0];
     }
 
     public static class GameDataMigrations

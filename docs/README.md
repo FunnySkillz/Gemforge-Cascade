@@ -1,6 +1,6 @@
 # Gemforge Cascade Design Docs
 
-These documents describe proposed work, not shipped features. The audit is based on the source as of 2026-09-19; the Unity scene has not been visually playtested here.
+The design documents describe proposed work, not shipped features. The original audits predate the runtime integration. See the [implementation review](implementation-review.md) for the current evidence, manual-change findings and limitations; offscreen rendering has now been inspected, but uncoached player/device testing remains open.
 
 The canonical delivery tracker is [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). It records current status, decisions, completion evidence and the next task. When another document disagrees with it, the implementation plan wins.
 

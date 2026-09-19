@@ -11,6 +11,8 @@ namespace GemforgeCascade.Core
         public bool IsMoving { get; private set; }
         private float size;
         private SpriteRenderer specialMarker;
+        private SpriteRenderer outline;
+        private bool hinted;
         private Vector3 start;
         private Vector3 target;
 
@@ -23,6 +25,14 @@ namespace GemforgeCascade.Core
             visual.sprite = sprite;
             visual.color = color;
             visual.sortingOrder = 1;
+            var outlineObject = new GameObject("Selection Outline");
+            outlineObject.transform.SetParent(transform, false);
+            outlineObject.transform.localScale = Vector3.one * 1.1f;
+            outline = outlineObject.AddComponent<SpriteRenderer>();
+            outline.sprite = sprite;
+            outline.color = UnityEngine.Color.white;
+            outline.sortingOrder = 0;
+            outline.enabled = false;
             var markerObject = new GameObject("Special Marker");
             markerObject.transform.SetParent(transform, false);
             specialMarker = markerObject.AddComponent<SpriteRenderer>();
@@ -77,8 +87,10 @@ namespace GemforgeCascade.Core
         public void SetSelected(bool selected)
         {
             IsSelected = selected;
-            transform.localScale = Vector3.one * size * (selected ? 1.14f : 1);
+            outline.enabled = selected || hinted;
+            transform.localScale = Vector3.one * size * (selected ? 1.06f : 1);
         }
+        public void SetHint(bool value) { hinted = value; outline.enabled = value || IsSelected; }
         public void Shrink(float progress) => transform.localScale = Vector3.one * size * (1 - progress);
     }
 }
