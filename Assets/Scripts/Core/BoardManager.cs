@@ -178,21 +178,31 @@ namespace GemforgeCascade.Core
             }
             game.ConsumeMove();
             int multiplier = 1;
+            int preferredCreationCell = to.y * model.Width + to.x;
             while (matches.Count > 0)
             {
-                game.Award(matches.Count, multiplier++);
+                MatchResolution resolution = model.PlanMatchResolution(matches, preferredCreationCell);
+                preferredCreationCell = -1;
                 for (float elapsed = 0; elapsed < animationDuration; elapsed += Time.deltaTime)
                 {
-                    foreach (int id in matches.Cells) pieces[id % model.Width, id / model.Width].Shrink(elapsed / animationDuration);
+                    foreach (int id in resolution.RemovedCells)
+                        pieces[id % model.Width, id / model.Width].Shrink(elapsed / animationDuration);
                     yield return null;
                 }
-                foreach (int id in matches.Cells)
+                foreach (int id in resolution.RemovedCells)
                 {
                     int x = id % model.Width, y = id / model.Width;
                     Destroy(pieces[x, y].gameObject);
                     pieces[x, y] = null;
                 }
-                model.Clear(matches.Cells);
+                ClearResult clear = model.ApplyMatchResolution(resolution);
+                game.Award(clear.PieceCount, multiplier++);
+                foreach (var creation in resolution.CreatedPieces)
+                {
+                    int x = creation.Key % model.Width;
+                    int y = creation.Key / model.Width;
+                    pieces[x, y].SetState(creation.Value);
+                }
                 int[,] sources = model.CollapseAndRefill();
                 var previous = pieces;
                 pieces = new Piece[model.Width, model.Height];

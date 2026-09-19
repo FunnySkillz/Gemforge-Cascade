@@ -41,13 +41,14 @@ internal static class Program
         ExerciseVersionedData();
         ExerciseStructuredMatches();
         ExerciseSpecialState();
+        ExerciseLineSpecials();
         ExerciseLayersAndObjectives();
         ExerciseLevelValidation();
         ExerciseGameState();
 
         Console.WriteLine(
             $"PASS: {assertions:N0} assertions; 200 seeded boards, 2,000 turns, " +
-            "deterministic saves, structured matches, special state, layers, objectives and game state.");
+            "deterministic saves, structured matches, line specials, layers, objectives and game state.");
     }
 
     private static void ExerciseGeneratedBoards()
@@ -266,6 +267,66 @@ internal static class Program
         level.startingLayers[4] = new CellLayerData(new CellLayer(CellLayerKind.Crystal, 2));
         BoardModel levelBoard = BoardModel.FromLevel(level);
         Check(levelBoard.Layers[1, 1].Durability == 2, "Authored layer did not load");
+    }
+
+    private static void ExerciseLineSpecials()
+    {
+        var board = new BoardModel(5, 5, 6, 12);
+        Empty(board);
+        for (int x = 0; x < 4; x++)
+        {
+            board.Cells[x, 0] = new BoardPiece(0);
+            board.Layers[x, 0] = new CellLayer(CellLayerKind.Crystal, 1);
+        }
+
+        MatchResult fourMatch = board.FindMatches();
+        int preferred = 2;
+        MatchResolution creation = board.PlanMatchResolution(fourMatch, preferred);
+        Check(creation.AffectedCells.Count == 4, "Four-match affected the wrong cells");
+        Check(creation.RemovedCells.Count == 3, "Four-match must preserve one creation cell");
+        Check(creation.CreatedPieces.Count == 1, "Four-match did not create exactly one special");
+        Check(creation.CreatedPieces.ContainsKey(preferred), "Player destination was not preferred");
+        Check(creation.CreatedPieces[preferred].Special == SpecialKind.RowClear, "Horizontal four created wrong special");
+
+        ClearResult creationClear = board.ApplyMatchResolution(creation);
+        Check(creationClear.PieceCount == 4, "Special creation did not count all matched pieces");
+        Check(creationClear.LayersCleared == 4, "Special creation did not damage every matched layer");
+        Check(board.Cells[2, 0].Special == SpecialKind.RowClear, "Created line special did not survive");
+        Check(board.Cells[0, 0].IsEmpty && board.Cells[1, 0].IsEmpty && board.Cells[3, 0].IsEmpty,
+            "Four-match left ordinary pieces behind");
+
+        Empty(board);
+        for (int x = 0; x < board.Width; x++)
+            board.Cells[x, 2] = new BoardPiece((x + 1) % board.ColorCount);
+        board.Cells[2, 1] = new BoardPiece(0);
+        board.Cells[2, 2] = new BoardPiece(0, SpecialKind.RowClear);
+        board.Cells[2, 3] = new BoardPiece(0);
+        MatchResolution rowActivation = board.PlanMatchResolution(board.FindMatches());
+        Check(rowActivation.AffectedCells.Count == 7, "Row clear affected the wrong area");
+        Check(rowActivation.CreatedPieces.Count == 0, "Three-match created a special");
+        ClearResult rowClear = board.ApplyMatchResolution(rowActivation);
+        Check(rowClear.PieceCount == 7, "Row clear removed the wrong number of pieces");
+
+        Empty(board);
+        for (int x = 0; x < board.Width; x++)
+            board.Cells[x, 2] = new BoardPiece((x + 1) % board.ColorCount);
+        for (int y = 0; y < board.Height; y++)
+            board.Cells[4, y] = new BoardPiece((y + 2) % board.ColorCount);
+        board.Cells[2, 1] = new BoardPiece(0);
+        board.Cells[2, 2] = new BoardPiece(0, SpecialKind.RowClear);
+        board.Cells[2, 3] = new BoardPiece(0);
+        board.Cells[4, 2] = new BoardPiece(3, SpecialKind.ColumnClear);
+        MatchResolution chained = board.PlanMatchResolution(board.FindMatches());
+        Check(chained.AffectedCells.Count == 11, "Chained line clears affected the wrong area");
+        ClearResult chainedClear = board.ApplyMatchResolution(chained);
+        Check(chainedClear.PieceCount == 11, "Chained line clears removed the wrong number of pieces");
+
+        Empty(board);
+        for (int y = 0; y < 4; y++)
+            board.Cells[0, y] = new BoardPiece(5);
+        MatchResolution vertical = board.PlanMatchResolution(board.FindMatches(), board.Width * 2);
+        Check(vertical.CreatedPieces[board.Width * 2].Special == SpecialKind.ColumnClear,
+            "Vertical four created wrong special");
     }
 
     private static void ExerciseDeterministicRandom()

@@ -149,6 +149,27 @@ namespace GemforgeCascade.Core
         }
     }
 
+    public sealed class MatchResolution
+    {
+        private readonly HashSet<int> affectedCells;
+        private readonly HashSet<int> removedCells;
+        private readonly Dictionary<int, BoardPiece> createdPieces;
+
+        public IReadOnlyCollection<int> AffectedCells => affectedCells;
+        public IReadOnlyCollection<int> RemovedCells => removedCells;
+        public IReadOnlyDictionary<int, BoardPiece> CreatedPieces => createdPieces;
+
+        internal MatchResolution(
+            HashSet<int> affectedCells,
+            HashSet<int> removedCells,
+            Dictionary<int, BoardPiece> createdPieces)
+        {
+            this.affectedCells = affectedCells;
+            this.removedCells = removedCells;
+            this.createdPieces = createdPieces;
+        }
+    }
+
     // Pure board rules, independent of scene objects and animation timing.
     public sealed class BoardModel
     {
@@ -373,6 +394,91 @@ namespace GemforgeCascade.Core
             return result;
         }
 
+        public MatchResolution PlanMatchResolution(MatchResult matches, int preferredCreationCell = -1)
+        {
+            if (matches == null)
+                throw new ArgumentNullException(nameof(matches));
+
+            var affected = new HashSet<int>(matches.Cells);
+            var created = new Dictionary<int, BoardPiece>();
+
+            foreach (MatchGroup group in matches.Groups)
+            {
+                if (group.Length != 4)
+                    continue;
+
+                int creationCell = SelectCreationCell(group, preferredCreationCell, created);
+                if (creationCell < 0)
+                    continue;
+
+                SpecialKind special = group.Direction == MatchDirection.Horizontal
+                    ? SpecialKind.RowClear
+                    : SpecialKind.ColumnClear;
+                created.Add(creationCell, new BoardPiece(group.ColorIndex, special));
+            }
+
+            ExpandLineSpecials(affected);
+
+            var removed = new HashSet<int>(affected);
+            foreach (int creationCell in created.Keys)
+                removed.Remove(creationCell);
+
+            return new MatchResolution(affected, removed, created);
+        }
+
+        private static int SelectCreationCell(
+            MatchGroup group,
+            int preferredCreationCell,
+            IReadOnlyDictionary<int, BoardPiece> created)
+        {
+            if (preferredCreationCell >= 0 && !created.ContainsKey(preferredCreationCell))
+            {
+                foreach (int cellId in group.CellIds)
+                    if (cellId == preferredCreationCell)
+                        return preferredCreationCell;
+            }
+
+            foreach (int cellId in group.CellIds)
+                if (!created.ContainsKey(cellId))
+                    return cellId;
+            return -1;
+        }
+
+        private void ExpandLineSpecials(HashSet<int> affected)
+        {
+            var pending = new Queue<int>(affected);
+            var activated = new HashSet<int>();
+            while (pending.Count > 0)
+            {
+                int cellId = pending.Dequeue();
+                if (!activated.Add(cellId))
+                    continue;
+
+                int x = cellId % Width;
+                int y = cellId / Width;
+                if (!Contains(x, y))
+                    continue;
+
+                SpecialKind special = Cells[x, y].Special;
+                if (special == SpecialKind.RowClear)
+                {
+                    for (int rowX = 0; rowX < Width; rowX++)
+                        AddAffected(affected, pending, y * Width + rowX);
+                }
+                else if (special == SpecialKind.ColumnClear)
+                {
+                    for (int columnY = 0; columnY < Height; columnY++)
+                        AddAffected(affected, pending, columnY * Width + x);
+                }
+            }
+        }
+
+        private static void AddAffected(HashSet<int> affected, Queue<int> pending, int cellId)
+        {
+            if (affected.Add(cellId))
+                pending.Enqueue(cellId);
+        }
+
         private static bool SameColor(BoardPiece first, BoardPiece second) =>
             !first.IsEmpty && !second.IsEmpty && first.ColorIndex == second.ColorIndex;
 
@@ -438,6 +544,38 @@ namespace GemforgeCascade.Core
                 Layers[x, y] = Layers[x, y].Damage(out bool layerCleared);
                 if (layerCleared)
                     result.LayersCleared++;
+            }
+
+            return result;
+        }
+
+        public ClearResult ApplyMatchResolution(MatchResolution resolution)
+        {
+            if (resolution == null)
+                throw new ArgumentNullException(nameof(resolution));
+
+            var result = new ClearResult(colorCount);
+            foreach (int cellId in resolution.AffectedCells)
+            {
+                int x = cellId % Width;
+                int y = cellId / Width;
+                if (!Contains(x, y) || Cells[x, y].IsEmpty)
+                    continue;
+
+                result.PieceCount++;
+                result.AddColor(Cells[x, y].ColorIndex);
+                if (!resolution.CreatedPieces.ContainsKey(cellId))
+                    Cells[x, y] = BoardPiece.Empty;
+                Layers[x, y] = Layers[x, y].Damage(out bool layerCleared);
+                if (layerCleared)
+                    result.LayersCleared++;
+            }
+
+            foreach (KeyValuePair<int, BoardPiece> creation in resolution.CreatedPieces)
+            {
+                int x = creation.Key % Width;
+                int y = creation.Key / Width;
+                Cells[x, y] = creation.Value;
             }
 
             return result;

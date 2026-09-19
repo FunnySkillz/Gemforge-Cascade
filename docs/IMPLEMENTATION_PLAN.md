@@ -27,10 +27,10 @@ Only mark work `DONE` with evidence. Passing pure .NET rules tests does not prov
 | Item | State |
 | --- | --- |
 | Active phase | Phase 2 - Competitive core (engine-independent work) |
-| Current task | `P2.1` line-clear creation and activation |
-| Last completed task | `P1.6` level validation and simulation APIs |
+| Current task | `P2.2` blast and color-clear specials |
+| Last completed task | `P2.1` line-clear creation and activation |
 | Primary blocker | Unity 2022.3 LTS/Hub is not installed or available on PATH |
-| Next review gate | P2.1 line-special rules pass creation, survival, activation and chain tests |
+| Next review gate | P2.2 blast/color-clear creation and activation tests pass |
 
 ## Phase overview
 
@@ -96,7 +96,7 @@ Outcome: ten authored levels offer real planning choices and introduce mechanics
 
 | ID | Deliverable | Status |
 | --- | --- | --- |
-| P2.1 | Four-in-line creates horizontal/vertical line-clear specials | `NOT STARTED` |
+| P2.1 | Four-in-line creates horizontal/vertical line-clear specials | `DONE` |
 | P2.2 | T/L creates blast special; five-in-line creates color clear | `NOT STARTED` |
 | P2.3 | Define and implement every special-to-special combination | `NOT STARTED` |
 | P2.4 | Implement collect-color objective | `NOT STARTED` |
@@ -247,6 +247,7 @@ Choose one path explicitly:
 | 2026-09-19 | Canonical phased implementation plan established | Begin P1.1 and P1.2; Unity validation remains blocked |
 | 2026-09-19 | Completed P1.1-P1.5 model foundation | 5,935,658 assertions pass; next is P1.6 validation/simulation |
 | 2026-09-19 | Completed P1.6 validation and deterministic simulation | 5,935,670 assertions pass; P1.7 blocked on Unity, begin P2.1 rules |
+| 2026-09-19 | Completed P2.1 line-special rules and runtime flow | Preferred-cell creation, row/column activation, chain reaction and layer-hit tests pass; prototype marker added |
 
 ## Update checklist
 

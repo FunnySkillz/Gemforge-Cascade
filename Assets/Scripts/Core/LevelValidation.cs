@@ -216,7 +216,8 @@ namespace GemforgeCascade.Core
                 MatchResult matches = board.FindMatches();
                 while (matches.Count > 0)
                 {
-                    ClearResult clear = board.Clear(matches.Cells);
+                    MatchResolution resolution = board.PlanMatchResolution(matches);
+                    ClearResult clear = board.ApplyMatchResolution(resolution);
                     result.PiecesCleared += clear.PieceCount;
                     result.Score += clear.PieceCount * 10 * multiplier++;
                     result.CascadeSteps++;

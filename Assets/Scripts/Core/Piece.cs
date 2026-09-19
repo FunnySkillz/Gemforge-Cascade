@@ -10,6 +10,7 @@ namespace GemforgeCascade.Core
         public bool IsSelected { get; private set; }
         public bool IsMoving { get; private set; }
         private float size;
+        private SpriteRenderer specialMarker;
         private Vector3 start;
         private Vector3 target;
 
@@ -22,7 +23,24 @@ namespace GemforgeCascade.Core
             visual.sprite = sprite;
             visual.color = color;
             visual.sortingOrder = 1;
+            var markerObject = new GameObject("Special Marker");
+            markerObject.transform.SetParent(transform, false);
+            specialMarker = markerObject.AddComponent<SpriteRenderer>();
+            specialMarker.sprite = sprite;
+            specialMarker.color = new Color(1f, 1f, 1f, 0.9f);
+            specialMarker.sortingOrder = 2;
+            SetState(state);
             SetSelected(false);
+        }
+
+        public void SetState(BoardPiece state)
+        {
+            Color = (PieceColor)state.ColorIndex;
+            Special = state.Special;
+            specialMarker.enabled = Special == SpecialKind.RowClear || Special == SpecialKind.ColumnClear;
+            specialMarker.transform.localScale = Special == SpecialKind.RowClear
+                ? new Vector3(0.62f, 0.12f, 1f)
+                : new Vector3(0.12f, 0.62f, 1f);
         }
 
         public void Place(int x, int y, Vector3 position, bool instant)
