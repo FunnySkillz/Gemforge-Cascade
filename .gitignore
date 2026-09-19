@@ -8,6 +8,8 @@
 .vs/
 .vscode/
 *.csproj
+!Tests/BoardRules/BoardRules.csproj
+**/bin/
 *.sln
 *.user
 *.pidb
